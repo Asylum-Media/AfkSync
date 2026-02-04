@@ -15,8 +15,16 @@ public final class AfkSync extends JavaPlugin implements Listener {
     private final Map<UUID, Long> lastActivity = new HashMap<>();
     private final Map<UUID, Long> afkSince = new HashMap<>();
 
+    // How long (ms) before we mark a player AFK
+    private long afkAfterMillis;
+
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
+        // Load config (default 300 seconds = 5 minutes)
+        afkAfterMillis = getConfig().getLong("afk.after-seconds", 300) * 1000L;
+
         // Register event listener
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -26,7 +34,10 @@ public final class AfkSync extends JavaPlugin implements Listener {
             lastActivity.put(player.getUniqueId(), now);
         }
 
-        getLogger().info("AfkSync enabled.");
+        // Start AFK detection loop
+        startAfkScheduler();
+
+        getLogger().info("AfkSync enabled (AFK after " + (afkAfterMillis / 1000) + "s).");
     }
 
     @Override
@@ -49,5 +60,38 @@ public final class AfkSync extends JavaPlugin implements Listener {
 
         // If they were AFK, mark them as back
         afkSince.remove(uuid);
+    }
+
+    private void startAfkScheduler() {
+        getServer().getScheduler().runTaskTimer(
+                this,
+                () -> {
+                    long now = System.currentTimeMillis();
+
+                    for (Player player : getServer().getOnlinePlayers()) {
+                        UUID uuid = player.getUniqueId();
+
+                        Long last = lastActivity.get(uuid);
+                        if (last == null) {
+                            lastActivity.put(uuid, now);
+                            continue;
+                        }
+
+                        // Already AFK → nothing to do
+                        if (afkSince.containsKey(uuid)) {
+                            continue;
+                        }
+
+                        long idleTime = now - last;
+                        if (idleTime >= afkAfterMillis) {
+                            afkSince.put(uuid, now);
+                            // Optional: keep this as fine so it doesn't spam console
+                            getLogger().fine(player.getName() + " is now AFK");
+                        }
+                    }
+                },
+                40L, // initial delay (2 seconds)
+                40L  // repeat every 2 seconds
+        );
     }
 }
