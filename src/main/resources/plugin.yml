@@ -1,0 +1,11 @@
+name: AfkSync
+version: '0.1.0-SNAPSHOT'
+main: org.asylum_media.afkSync.AfkSync
+api-version: '1.21'
+load: STARTUP
+authors: [ Asylum_Media ]
+description: All-in-one AFK state and absence context engine
+website: https://github.com/Asylum-Media?tab=repositories
+softdepend:
+  - CommandPanels
+  - StatSync
