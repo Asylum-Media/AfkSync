@@ -1,5 +1,5 @@
 name: AfkSync
-version: '0.1.1-SNAPSHOT'
+version: '0.1.2-SNAPSHOT'
 main: org.asylum_media.afkSync.AfkSync
 api-version: '1.21'
 load: STARTUP
@@ -9,3 +9,8 @@ website: https://github.com/Asylum-Media?tab=repositories
 softdepend:
   - CommandPanels
   - StatSync
+commands:
+  afksync:
+    description: Query AFK state
+    usage: /afksync status <player>
+    permission: afksync.status

@@ -1,5 +1,7 @@
 package org.asylum_media.afkSync;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -60,6 +62,44 @@ public final class AfkSync extends JavaPlugin implements Listener {
 
         // If they were AFK, mark them as back
         afkSince.remove(uuid);
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+        if (!command.getName().equalsIgnoreCase("afksync")) {
+            return false;
+        }
+
+        if (args.length != 2 || !args[0].equalsIgnoreCase("status")) {
+            sender.sendMessage("§cUsage: /afksync status <player>");
+            return true;
+        }
+
+        Player target = getServer().getPlayerExact(args[1]);
+        if (target == null) {
+            sender.sendMessage("§cPlayer not found or not online.");
+            return true;
+        }
+
+        UUID uuid = target.getUniqueId();
+
+        boolean isAfk = afkSince.containsKey(uuid);
+        long now = System.currentTimeMillis();
+
+        if (!isAfk) {
+            sender.sendMessage("§a" + target.getName() + " is not AFK.");
+            return true;
+        }
+
+        long since = afkSince.get(uuid);
+        long seconds = (now - since) / 1000;
+
+        sender.sendMessage(
+                "§e" + target.getName() + " is AFK (§f" + seconds + "s§e)"
+        );
+
+        return true;
     }
 
     private void startAfkScheduler() {
